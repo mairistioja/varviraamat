@@ -3,6 +3,7 @@ import sys #Qapplication tahab sys-i
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from xml.dom.minidom import parse
 
 
 class JoonistusAken(QMainWindow):
@@ -39,9 +40,10 @@ class JoonistusAken(QMainWindow):
         self.showMaximized() #teeb joonistusakna nähtavaks ja ekraani suuruseks
 
     def avafail(self, failinimi):
-        fail = QFile(failinimi)
-        fail.open(QIODevice.ReadOnly|QIODevice.Text)
-        
+        fail = parse(failinimi)
+        for kujund in fail.getElementsByTagName("path"):
+            print(kujund.getAttribute("d"))
+
 class JoonistusElement(QGraphicsPathItem):
     def __init__(self):
         super().__init__()
