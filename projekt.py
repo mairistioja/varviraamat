@@ -23,7 +23,7 @@ class JoonistusAken(QMainWindow):
         view = QGraphicsView(self.scene, self) #Qgraphicsview on widget, mis kuvab joonistusala
         self.setCentralWidget(view) #paneb view QMainWindow keskseks vidinaks
 
-        self.avafail("joonistus.svg")
+        self.avafail("lind.svg")
 
 
         # Joonistus:
@@ -41,8 +41,42 @@ class JoonistusAken(QMainWindow):
 
     def avafail(self, failinimi):
         fail = parse(failinimi)
+        eraldi = []
         for kujund in fail.getElementsByTagName("path"):
-            print(kujund.getAttribute("d"))
+            d = kujund.getAttribute("d").split()
+            eraldi.append(d)
+            e = JoonistusElement()
+            p = QPainterPath()
+            käsk = ""
+            viimanepunkt = [0.0, 0.0]
+            for x in d:
+                if len(x) == 1:
+                    if x == 'z':
+                        p.closeSubpath()
+                    else:
+                        käsk = x
+                else:
+                    k = x.split(",")
+                    k[0] = float(k[0])
+                    k[1] = float(k[1])
+                    if käsk == 'M':
+                        p.moveTo(k[0], k[1])
+                        viimanepunkt = k
+                        käsk = 'L'
+                    elif käsk == 'm':
+                        viimanepunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
+                        p.moveTo(viimanepunkt[0], viimanepunkt[1])
+                        käsk = 'l'
+                    elif käsk == 'L':
+                        p.lineTo(k[0], k[1])
+                        viimanepunkt = k
+                    elif käsk == 'l':
+                        viimanepunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
+                        p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                    
+            e.setPath(p)
+            self.scene.addItem(e)
+        print(eraldi)   
 
 class JoonistusElement(QGraphicsPathItem):
     def __init__(self):
