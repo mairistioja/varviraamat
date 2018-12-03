@@ -9,8 +9,8 @@ import math
 
 def pathArcSegment(path, xc, yc, th0, th1, rx, ry, xAxisRotation): #the arc handling code underneath is from XSVG (BSD license)
 # Copyright  2002 USC/Information Sciences Institute http://code.qt.io/cgit/qt/qtsvg.git/tree/src/svg/qsvghandler.cpp
-    sinTh = math.sin(xAxisRotation * (pi / 180.0))
-    cosTh = math.cos(xAxisRotation * (pi / 180.0))
+    sinTh = math.sin(xAxisRotation * (math.pi / 180.0))
+    cosTh = math.cos(xAxisRotation * (math.pi / 180.0))
 
     a00 =  cosTh * rx
     a01 = -sinTh * ry
@@ -67,7 +67,7 @@ def pathArc(path, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, cur
     #   The arc fits a unit-radius circle in this space.
     d = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)
     sfactor_sq = 1.0 / d - 0.25
-    if sfactor_sq < 0: 
+    if sfactor_sq < 0:
         sfactor_sq = 0
     sfactor = math.sqrt(sfactor_sq)
     if sweep_flag == large_arc_flag: 
@@ -129,24 +129,25 @@ class JoonistusAken(QMainWindow):
 
     def avafail(self, failinimi):
         fail = parse(failinimi)
-        eraldi = []
         for kujund in fail.getElementsByTagName("path"):
             d = kujund.getAttribute("d").split()
-            eraldi.append(d)
             e = JoonistusElement()
             p = QPainterPath()
             käsk = ""
             viimanepunkt = [0.0, 0.0]
             for x in d:
-                if len(x) == 1:
+                if len(x) == 1 and x[0].isalpha():
                     if x == 'z':
                         p.closeSubpath()
+                        käsk = ''
                     else:
                         käsk = x
+                        relatiivne = käsk[0].islower()
                 else:
                     k = x.split(",")
-                    k[0] = float(k[0])
-                    k[1] = float(k[1])
+                    if len(k) == 2:
+                        k[0] = float(k[0])
+                        k[1] = float(k[1])
                     if käsk == 'M':
                         p.moveTo(k[0], k[1])
                         viimanepunkt = k
@@ -161,11 +162,31 @@ class JoonistusAken(QMainWindow):
                     elif käsk == 'l':
                         viimanepunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
                         p.lineTo(viimanepunkt[0], viimanepunkt[1])
-                    
+                    elif käsk == 'a' or käsk == 'A':
+                        rx = k[0]
+                        ry = k[1]
+                        käsk = 'a_parsi_pööret'
+                    elif käsk == 'a_parsi_pööret':
+                        pööre = float(x)
+                        käsk = 'a_parsi_large_arc'
+                    elif käsk == 'a_parsi_large_arc':
+                        large_arc = (x != '0')
+                        käsk = 'a_parsi_sweep'
+                    elif käsk == 'a_parsi_sweep':
+                        sweep = (x != '0')
+                        käsk = 'a_lõpukoordinaadid'
+                    elif käsk == 'a_lõpukoordinaadid':
+                        if relatiivne:
+                            uuspunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
+                        else:
+                            uuspunkt = k
+                        pathArc(p, rx, ry, pööre, large_arc, sweep, uuspunkt[0], uuspunkt[1], viimanepunkt[0], viimanepunkt[1])
+                        viimanepunkt = uuspunkt
+                        käsk = 'A' if relatiivne else 'a'
+
                     
             e.setPath(p)
             self.scene.addItem(e)
-        print(eraldi)   
 
 class JoonistusElement(QGraphicsPathItem):
     def __init__(self):
