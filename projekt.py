@@ -130,6 +130,10 @@ class JoonistusAken(QMainWindow):
 
         # Menüüd:
         fileMenu = self.menuBar().addMenu("&File") #addMenu lisab alammenüü, & märgib alammenüü kiirendi, alt+F.
+        openAction = QAction("&Open", self) #loob tegevuse, self on vajalik, et alles jääks
+        openAction.setShortcut("Ctrl+O")
+        openAction.triggered.connect(self.ava_fail) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
+        fileMenu.addAction(openAction) #paneb openActioni failimenüü lõppu
         quitAction = QAction("&Quit", self) #loob tegevuse, self on vajalik, et alles jääks
         quitAction.setShortcut("Ctrl+Q")
         quitAction.triggered.connect(self.close) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
@@ -138,13 +142,11 @@ class JoonistusAken(QMainWindow):
         toolbar = self.addToolBar('maintoolbar')
         color_action = toolbar.addAction('Vali värv')
         color_action.triggered.connect(self.vali_varv)
-        # Joonistusala:
-        self.scene = QGraphicsScene(self) #loob joonistusala
-        view = QGraphicsView(self.scene, self) #Qgraphicsview on widget, mis kuvab joonistusala
-        self.setCentralWidget(view) #paneb view QMainWindow keskseks vidinaks
-
-        self.avafail("lind.svg")
         
+        # Joonistusala:
+        self.view = QGraphicsView(self) #Qgraphicsview on widget, mis kuvab joonistusala
+        self.setCentralWidget(self.view) #paneb view QMainWindow keskseks vidinaks
+
         self.showMaximized() #teeb joonistusakna nähtavaks ja ekraani suuruseks
 
     def vali_varv(self):
@@ -154,8 +156,13 @@ class JoonistusAken(QMainWindow):
             self.aktiivne_varv = dialog.currentColor()
 
 
-    def avafail(self, failinimi):
+    def ava_fail(self):
+        failinimi, _ = QFileDialog.getOpenFileName(self, 'Ava joonistus', '/', 'Joonistused (*.svg)')
+        if failinimi == '':
+            return
+
         fail = parse(failinimi)
+        uus_scene = QGraphicsScene(self)
         for kujund in fail.getElementsByTagName("path"):
             d = kujund.getAttribute("d")
 
@@ -269,7 +276,9 @@ class JoonistusAken(QMainWindow):
 
                     
             e.setPath(p)
-            self.scene.addItem(e)
+            uus_scene.addItem(e)
+            self.scene = uus_scene
+            self.view.setScene(uus_scene)
 
 class JoonistusElement(QGraphicsPathItem):
     def __init__(self, peaaken):
