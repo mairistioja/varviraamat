@@ -169,6 +169,7 @@ class JoonistusAken(QMainWindow):
             # teisendame loetavamale kujule
             d = re.sub("([MmLlHhVvAaCcSsQqTtZz])([-0-9.])", "\\1 \\2", d) #tühik vahele
             d = re.sub("([0-9.])([-MmLlHhVvAaCcSsQqTtZz])", "\\1 \\2", d) #tühik vahele
+            d = re.sub("([MmLlHhVvAaCcSsQqTtZz])([-MmLlHhVvAaCcSsQqTtZz])", "\\1 \\2", d) #tühik vahele
             d = re.sub("[ ,]+", " ", d) #mitu tühikut ja/või koma üheks tühikuks
 
             d = d.split()
