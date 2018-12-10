@@ -147,8 +147,8 @@ class JoonistusAken(QMainWindow):
             d = kujund.getAttribute("d")
 
             # teisendame loetavamale kujule
-            d = re.sub("([MmLlHhVvAaCcZz])([-0-9.])", "\\1 \\2", d) #tühik vahele
-            d = re.sub("([0-9.])([-MmLlHhVvAaCcZz])", "\\1 \\2", d) #tühik vahele
+            d = re.sub("([MmLlHhVvAaCcSsQqTtZz])([-0-9.])", "\\1 \\2", d) #tühik vahele
+            d = re.sub("([0-9.])([-MmLlHhVvAaCcSsQqTtZz])", "\\1 \\2", d) #tühik vahele
             d = re.sub("[ ,]+", " ", d) #mitu tühikut ja/või koma üheks tühikuks
 
             d = d.split()
@@ -156,14 +156,16 @@ class JoonistusAken(QMainWindow):
             e = JoonistusElement()
             p = QPainterPath()
             käsk = ""
+            eelnev_käsk = ""
             argumente_vaja = {
-                'M': 2, 'm': 2, 'L' : 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'a': 7, 'A': 7, 'c': 6, 'C': 6, 'z': 0, 'Z': 0
+                'M': 2, 'm': 2, 'L' : 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'a': 7, 'A': 7, 'c': 6, 'C': 6, 'q': 4, 'Q': 4, 's': 4, 'S': 4, 't': 2, 'T': 2, 'z': 0, 'Z': 0
             }
             a = [] #argumendid
             viimanepunkt = [0.0, 0.0]
             for x in d:
                 if len(a) == 0 and len(x) == 1 and x[0] in argumente_vaja.keys():
                     a = []
+                    eelnev_käsk = käsk
                     käsk = x
                 else:
                     if len(a) < argumente_vaja[käsk]:
@@ -204,16 +206,52 @@ class JoonistusAken(QMainWindow):
                             viimanepunkt = uuspunkt
                         elif käsk == 'c':
                             uuspunkt = [viimanepunkt[0] + float(a[4]), viimanepunkt[1] + float(a[5])]
-                            p.cubicTo(viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]), viimanepunkt[0] + float(a[2]), viimanepunkt[1] + float(a[3]), uuspunkt[0], uuspunkt[1])
+                            viimanekontrollpunkt = (viimanepunkt[0] + float(a[2]), viimanepunkt[1] + float(a[3]))
+                            p.cubicTo(viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]), viimanekontrollpunkt[0], viimanekontrollpunkt[1], uuspunkt[0], uuspunkt[1])
                             viimanepunkt = uuspunkt
                         elif käsk == 'C':
                             viimanepunkt = [float(a[4]), float(a[5])]
-                            p.cubicTo(float(a[0]), float(a[1]), float(a[2]), float(a[3]), viimanepunkt[0], viimanepunkt[1])
+                            viimanekontrollpunkt = (float(a[2]), float(a[3]))
+                            p.cubicTo(float(a[0]), float(a[1]), viimanekontrollpunkt[0], viimanekontrollpunkt[1], viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'Q':
+                            viimanepunkt = [float(a[2]), float(a[3])]
+                            p.quadTo(float(a[0]), float(a[1]), viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'q':
+                            uuspunkt = [viimanepunkt[0] + float(a[2]), viimanepunkt[1] + float(a[3])]
+                            p.quadTo(viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]), uuspunkt[0], uuspunkt[1])
+                            viimanepunkt = uuspunkt
+                        elif käsk == 'S':
+                            if eelnev_käsk in ['c', 'C', 's', 'S']:
+                                c1 = (2*viimanepunkt[0]-viimanekontrollpunkt[0], 2*viimanepunkt[1]-viimanekontrollpunkt[1])
+                            else:
+                                c1 = viimanepunkt
+                            viimanepunkt = [float(a[2]), float(a[3])]
+                            viimanekontrollpunkt = (float(a[0]), float(a[1]))
+                            p.cubicTo(c1[0], c1[1], viimanekontrollpunkt[0], viimanekontrollpunkt[1], viimanepunkt[0], viimanepunkt[1]) 
+                        elif käsk == 's':
+                            if eelnev_käsk in ['c', 'C', 's', 'S']:
+                                c1 = (2*viimanepunkt[0]-viimanekontrollpunkt[0], 2*viimanepunkt[1]-viimanekontrollpunkt[1])
+                            else:
+                                c1 = viimanepunkt
+                            viimanekontrollpunkt = (viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]))
+                            viimanepunkt = [viimanepunkt[0] + float(a[2]), viimanepunkt[0] + float(a[3])]
+                            p.cubicTo(c1[0], c1[1], viimanekontrollpunkt[0], viimanekontrollpunkt[1], viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'T':
+                            if eelnev_käsk in ['q', 'Q', 't', 'T']:
+                                viimanekontrollpunkt = (2*viimanepunkt[0]-viimanekontrollpunkt[0], 2*viimanepunkt[1]-viimanekontrollpunkt[1])
+                            else:
+                                viimanekontrollpunkt = viimanepunkt
+                            viimanepunkt = [float(a[0]), float(a[1])]
+                            p.quadTo(viimanekontrollpunkt[0], viimanekontrollpunkt[1], viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 't':
+                            if eelnev_käsk in ['q', 'Q', 't', 'T']:
+                                viimanekontrollpunkt = (2*viimanepunkt[0]-viimanekontrollpunkt[0], 2*viimanepunkt[1]-viimanekontrollpunkt[1])
+                            else:
+                                viimanekontrollpunkt = viimanepunkt
+                            viimanepunkt = [float(a[0]), float(a[1])]
+                            p.quadTo(viimanekontrollpunkt[0], viimanekontrollpunkt[1], viimanepunkt[0], viimanepunkt[1])
                         elif käsk == 'z' or käsk == 'Z':
                             p.closeSubpath()
-                        else:
-                            print("PAHA", käsk, d)
-                            käsk = ''
                         a = [] #uuele ringile
 
                     
