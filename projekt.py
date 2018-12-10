@@ -137,18 +137,6 @@ class JoonistusAken(QMainWindow):
         self.setCentralWidget(view) #paneb view QMainWindow keskseks vidinaks
 
         self.avafail("lind.svg")
-
-
-        # Joonistus:
-        e = JoonistusElement()
-        imelik = QPainterPath() #The QPainterPath class provides a container for painting operations, enabling graphical shapes to be constructed and reused.
-        imelik.addEllipse(0, 25, 100, 50) #nt teeb ellipsi
-        imelik.moveTo(12,2)
-        imelik.lineTo(100, 100)
-        imelik.lineTo(20, 140)
-        imelik.closeSubpath()
-        e.setPath(imelik) #lisab/asendab joonistusElemendile
-        self.scene.addItem(e)
         
         self.showMaximized() #teeb joonistusakna nähtavaks ja ekraani suuruseks
 
