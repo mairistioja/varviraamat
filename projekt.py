@@ -5,7 +5,7 @@ import sys #Qapplication tahab sys-i
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from xml.dom.minidom import parse
+from xml.dom.minidom import parseString
 import math
 import re
 
@@ -161,9 +161,18 @@ class JoonistusAken(QMainWindow):
         if failinimi == '':
             return
 
-        fail = parse(failinimi)
+        fail = open(failinimi)
+        read = fail.readlines()
+        while len(read) > 0 and read[-1].strip() == "":
+            del read[-1]
+        if re.match('^<!--värviraamat [^-]* -->$' ,read[-1].strip()):
+            värvid = read[-1].strip()
+            del read[-1]
+
+        self.failisisu = "".join(read)
+        svg = parseString(self.failisisu)
         uus_scene = QGraphicsScene(self)
-        for kujund in fail.getElementsByTagName("path"):
+        for kujund in svg.getElementsByTagName("path"):
             d = kujund.getAttribute("d")
 
             # teisendame loetavamale kujule
