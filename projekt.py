@@ -6,9 +6,11 @@ from PyQt5.QtGui import *
 from xml.dom.minidom import parse
 import math
 
-
-def pathArcSegment(path, xc, yc, th0, th1, rx, ry, xAxisRotation): #the arc handling code underneath is from XSVG (BSD license)
-# Copyright  2002 USC/Information Sciences Institute http://code.qt.io/cgit/qt/qtsvg.git/tree/src/svg/qsvghandler.cpp
+# See funktsioon on litsenseeritud LGPL 2.0 litsentsiga,
+#   Copyright (C) 2016 The Qt Company Ltd.it.
+# vastavalt tingimustele KDE Free Qt Foundation tingimustele.
+# Võetud aadressilt http://code.qt.io/cgit/qt/qtsvg.git/tree/src/svg/qsvghandler.cpp
+def pathArcSegment(path, xc, yc, th0, th1, rx, ry, xAxisRotation):
     sinTh = math.sin(xAxisRotation * (math.pi / 180.0))
     cosTh = math.cos(xAxisRotation * (math.pi / 180.0))
 
@@ -30,9 +32,32 @@ def pathArcSegment(path, xc, yc, th0, th1, rx, ry, xAxisRotation): #the arc hand
                  a00 * x2 + a01 * y2, a10 * x2 + a11 * y2,
                  a00 * x3 + a01 * y3, a10 * x3 + a11 * y3)
 
-
-def pathArc(path, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, curx, cury): #the arc handling code is from XSVG (BSD license)
+# See funktsioon on võetud järgneva litsentsiga:
+#
 # Copyright  2002 USC/Information Sciences Institute
+#
+# Permission to use, copy, modify, distribute, and sell this software
+# and its documentation for any purpose is hereby granted without
+# fee, provided that the above copyright notice appear in all copies
+# and that both that copyright notice and this permission notice
+# appear in supporting documentation, and that the name of
+# Information Sciences Institute not be used in advertising or
+# publicity pertaining to distribution of the software without
+# specific, written prior permission.  Information Sciences Institute
+# makes no representations about the suitability of this software for
+# any purpose.  It is provided "as is" without express or implied
+# warranty.
+#
+# INFORMATION SCIENCES INSTITUTE DISCLAIMS ALL WARRANTIES WITH REGARD
+# TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL INFORMATION SCIENCES
+# INSTITUTE BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+# DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA
+# OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+# TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+def pathArc(path, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, curx, cury):
     rx = abs(rx)
     ry = abs(ry)
 
