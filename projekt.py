@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 import sys #Qapplication tahab sys-i
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -124,6 +126,7 @@ class JoonistusAken(QMainWindow):
     def __init__(self): # self viitab klassile endale, init on konstruktor
         super().__init__() #konstrueerib superklassi
         self.setWindowTitle("Test") #akna pealkiri
+        self.aktiivne_varv = QColor(0, 0, 0)
 
         # Menüüd:
         fileMenu = self.menuBar().addMenu("&File") #addMenu lisab alammenüü, & märgib alammenüü kiirendi, alt+F.
@@ -132,6 +135,9 @@ class JoonistusAken(QMainWindow):
         quitAction.triggered.connect(self.close) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
         fileMenu.addAction(quitAction) #paneb quitActioni failimenüü lõppu
         
+        toolbar = self.addToolBar('maintoolbar')
+        color_action = toolbar.addAction('Vali värv')
+        color_action.triggered.connect(self.vali_varv)
         # Joonistusala:
         self.scene = QGraphicsScene(self) #loob joonistusala
         view = QGraphicsView(self.scene, self) #Qgraphicsview on widget, mis kuvab joonistusala
@@ -140,6 +146,13 @@ class JoonistusAken(QMainWindow):
         self.avafail("lind.svg")
         
         self.showMaximized() #teeb joonistusakna nähtavaks ja ekraani suuruseks
+
+    def vali_varv(self):
+        dialog = QColorDialog()
+        dialog.setCurrentColor(self.aktiivne_varv)
+        if dialog.exec() == 1:
+            self.aktiivne_varv = dialog.currentColor()
+
 
     def avafail(self, failinimi):
         fail = parse(failinimi)
@@ -153,7 +166,7 @@ class JoonistusAken(QMainWindow):
 
             d = d.split()
             print(d)
-            e = JoonistusElement()
+            e = JoonistusElement(self)
             p = QPainterPath()
             käsk = ""
             eelnev_käsk = ""
@@ -259,22 +272,14 @@ class JoonistusAken(QMainWindow):
             self.scene.addItem(e)
 
 class JoonistusElement(QGraphicsPathItem):
-    def __init__(self):
+    def __init__(self, peaaken):
         super().__init__()
-        self.rgb = 'R'; #rgb on hetkel suvaline muutuja, mis kuulub joonistuselemendi sisse
+        self.peaaken = peaaken
         self.setPen(QPen(Qt.NoPen))
-        self.setBrush(QColor(255, 0, 0))
+        self.setBrush(QColor(0, 0, 0))
         
     def mousePressEvent(self, event): #seda kutsutakse välja, kui keegi vajutab QGraphicsPathItemi peale, event-i sees on tõenäol sündmuse info
-        if self.rgb == 'R':
-            self.rgb = 'G'
-            self.setBrush(QColor(0, 255, 0))
-        elif self.rgb == 'G':
-            self.rgb = 'B'
-            self.setBrush(QColor(0, 0, 255))
-        elif self.rgb == 'B':
-            self.rgb = 'R'
-            self.setBrush(QColor(255, 0, 0))
+        self.setBrush(self.peaaken.aktiivne_varv)
         return QGraphicsPathItem.mousePressEvent(self, event) #päris kindel ei ole, kas seda on vaja, aga vist on hea stiil
 
 app = QApplication(sys.argv)
