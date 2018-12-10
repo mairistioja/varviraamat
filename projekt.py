@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from xml.dom.minidom import parse
 import math
+import re
 
 # See funktsioon on litsenseeritud LGPL 2.0 litsentsiga,
 #   Copyright (C) 2016 The Qt Company Ltd.it.
@@ -143,59 +144,77 @@ class JoonistusAken(QMainWindow):
     def avafail(self, failinimi):
         fail = parse(failinimi)
         for kujund in fail.getElementsByTagName("path"):
-            d = kujund.getAttribute("d").split()
+            d = kujund.getAttribute("d")
+
+            # teisendame loetavamale kujule
+            d = re.sub("([MmLlHhVvAaCcZz])([-0-9.])", "\\1 \\2", d) #tühik vahele
+            d = re.sub("([0-9.])([-MmLlHhVvAaCcZz])", "\\1 \\2", d) #tühik vahele
+            d = re.sub("[ ,]+", " ", d) #mitu tühikut ja/või koma üheks tühikuks
+
+            d = d.split()
+            print(d)
             e = JoonistusElement()
             p = QPainterPath()
             käsk = ""
+            argumente_vaja = {
+                'M': 2, 'm': 2, 'L' : 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'a': 7, 'A': 7, 'c': 6, 'C': 6, 'z': 0, 'Z': 0
+            }
+            a = [] #argumendid
             viimanepunkt = [0.0, 0.0]
             for x in d:
-                if len(x) == 1 and x[0].isalpha():
-                    if x == 'z':
-                        p.closeSubpath()
-                        käsk = ''
-                    else:
-                        käsk = x
-                        relatiivne = käsk[0].islower()
+                if len(a) == 0 and len(x) == 1 and x[0] in argumente_vaja.keys():
+                    a = []
+                    käsk = x
                 else:
-                    k = x.split(",")
-                    if len(k) == 2:
-                        k[0] = float(k[0])
-                        k[1] = float(k[1])
-                    if käsk == 'M':
-                        p.moveTo(k[0], k[1])
-                        viimanepunkt = k
-                        käsk = 'L'
-                    elif käsk == 'm':
-                        viimanepunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
-                        p.moveTo(viimanepunkt[0], viimanepunkt[1])
-                        käsk = 'l'
-                    elif käsk == 'L':
-                        p.lineTo(k[0], k[1])
-                        viimanepunkt = k
-                    elif käsk == 'l':
-                        viimanepunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
-                        p.lineTo(viimanepunkt[0], viimanepunkt[1])
-                    elif käsk == 'a' or käsk == 'A':
-                        rx = k[0]
-                        ry = k[1]
-                        käsk = 'a_parsi_pööret'
-                    elif käsk == 'a_parsi_pööret':
-                        pööre = float(x)
-                        käsk = 'a_parsi_large_arc'
-                    elif käsk == 'a_parsi_large_arc':
-                        large_arc = (x != '0')
-                        käsk = 'a_parsi_sweep'
-                    elif käsk == 'a_parsi_sweep':
-                        sweep = (x != '0')
-                        käsk = 'a_lõpukoordinaadid'
-                    elif käsk == 'a_lõpukoordinaadid':
-                        if relatiivne:
-                            uuspunkt = [viimanepunkt[0] + k[0], viimanepunkt[1] + k[1]]
+                    if len(a) < argumente_vaja[käsk]:
+                        a.append(x)
+                    if len(a) >= argumente_vaja[käsk]:
+                        if käsk == 'M':
+                            viimanepunkt = [float(a[0]), float(a[1])]
+                            p.moveTo(viimanepunkt[0], viimanepunkt[1])
+                            käsk = 'L'
+                        elif käsk == 'm':
+                            viimanepunkt = [viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1])]
+                            p.moveTo(viimanepunkt[0], viimanepunkt[1])
+                            käsk = 'l'
+                        elif käsk == 'L':
+                            viimanepunkt = [float(a[0]), float(a[1])]
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'l':
+                            viimanepunkt = [viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1])]
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'V':
+                            viimanepunkt[1] = float(a[0])
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'v':
+                            viimanepunkt[1] += float(a[0])
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'H':
+                            viimanepunkt[0] = float(a[0])
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'h':
+                            viimanepunkt[0] += float(a[0])
+                            p.lineTo(viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'a' or käsk == 'A':
+                            if käsk == 'a':
+                                uuspunkt = [viimanepunkt[0] + float(a[5]), viimanepunkt[1] + float(a[6])]
+                            else:
+                                uuspunkt = [float(a[5]), float(a[6])]
+                            pathArc(p, float(a[0]), float(a[1]), float(a[2]), (a[3] != '0'), (a[4] != '0'), uuspunkt[0], uuspunkt[1], viimanepunkt[0], viimanepunkt[1])
+                            viimanepunkt = uuspunkt
+                        elif käsk == 'c':
+                            uuspunkt = [viimanepunkt[0] + float(a[4]), viimanepunkt[1] + float(a[5])]
+                            p.cubicTo(viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]), viimanepunkt[0] + float(a[2]), viimanepunkt[1] + float(a[3]), uuspunkt[0], uuspunkt[1])
+                            viimanepunkt = uuspunkt
+                        elif käsk == 'C':
+                            viimanepunkt = [float(a[4]), float(a[5])]
+                            p.cubicTo(float(a[0]), float(a[1]), float(a[2]), float(a[3]), viimanepunkt[0], viimanepunkt[1])
+                        elif käsk == 'z' or käsk == 'Z':
+                            p.closeSubpath()
                         else:
-                            uuspunkt = k
-                        pathArc(p, rx, ry, pööre, large_arc, sweep, uuspunkt[0], uuspunkt[1], viimanepunkt[0], viimanepunkt[1])
-                        viimanepunkt = uuspunkt
-                        käsk = 'A' if relatiivne else 'a'
+                            print("PAHA", käsk, d)
+                            käsk = ''
+                        a = [] #uuele ringile
 
                     
             e.setPath(p)
