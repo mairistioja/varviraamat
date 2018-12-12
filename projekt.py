@@ -246,10 +246,12 @@ class JoonistusAken(QMainWindow):
                         elif käsk == 'Q':
                             viimanepunkt = [float(a[2]), float(a[3])]
                             p.quadTo(float(a[0]), float(a[1]), viimanepunkt[0], viimanepunkt[1])
+                            viimanekontrollpunkt = (float(a[0]), float(a[1]))
                         elif käsk == 'q':
                             uuspunkt = [viimanepunkt[0] + float(a[2]), viimanepunkt[1] + float(a[3])]
                             p.quadTo(viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]), uuspunkt[0], uuspunkt[1])
                             viimanepunkt = uuspunkt
+                            viimanekontrollpunkt = (viimanepunkt[0] + float(a[0]), viimanepunkt[1] + float(a[1]))
                         elif käsk == 'S':
                             if eelnev_käsk in ['c', 'C', 's', 'S']:
                                 c1 = (2*viimanepunkt[0]-viimanekontrollpunkt[0], 2*viimanepunkt[1]-viimanekontrollpunkt[1])
