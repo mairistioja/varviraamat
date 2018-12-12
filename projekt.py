@@ -134,6 +134,10 @@ class JoonistusAken(QMainWindow):
         openAction.setShortcut("Ctrl+O")
         openAction.triggered.connect(self.ava_fail) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
         fileMenu.addAction(openAction) #paneb openActioni failimenüü lõppu
+        saveAction = QAction("&Save", self) #loob tegevuse, self on vajalik, et alles jääks
+        saveAction.setShortcut("Ctrl+S")
+        saveAction.triggered.connect(self.save) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
+        fileMenu.addAction(saveAction) #paneb saveActioni failimenüü lõppu
         quitAction = QAction("&Quit", self) #loob tegevuse, self on vajalik, et alles jääks
         quitAction.setShortcut("Ctrl+Q")
         quitAction.triggered.connect(self.close) #signaal triggered käivitatakse siis, kui keegi QActioni käivitab (klikib vms).
@@ -162,7 +166,18 @@ class JoonistusAken(QMainWindow):
             pixmap = QPixmap(100, 100)
             pixmap.fill(self.aktiivne_varv)
             self.color_action.setIcon(QIcon(pixmap))
-
+    
+    def save(self):
+        varvide_list = []
+        for el in self.varvid:
+            varvide_list.append(str(el.red()) + ' ' + str(el.green()) + ' ' + str(el.blue()) + ' ')
+        varvide_sone = ','.join(varvide_list)
+        print(varvide_sone)
+        
+        uus_failinimi, _ = QFileDialog.getSaveFileName(self, 'Salvesta fail','/', 'Joonistused (*.svg)')
+        uus_fail = open(uus_failinimi, 'w', encoding = 'UTF-8')
+        uus_fail.write(self.failisisu + '\n' + '<!--värviraamat ' + varvide_sone + ' -->')
+        uus_fail.close()
 
     def ava_fail(self):
         failinimi, _ = QFileDialog.getOpenFileName(self, 'Ava joonistus', '/', 'Joonistused (*.svg)')
@@ -180,7 +195,8 @@ class JoonistusAken(QMainWindow):
                 v = self.varvid[i].strip().split(' ')
                 self.varvid[i] = QColor(int(v[0]), int(v[1]), int(v[2]))
             del read[-1]
-            
+        
+        
         self.failisisu = "".join(read)
         svg = parseString(self.failisisu)
         uus_scene = QGraphicsScene(self)
@@ -198,7 +214,7 @@ class JoonistusAken(QMainWindow):
             d = re.sub("[ ,]+", " ", d) #mitu tühikut ja/või koma üheks tühikuks
 
             d = d.split()
-            print(d)
+            #print(d)
             e = JoonistusElement(self, i)
             p = QPainterPath()
             käsk = ""
