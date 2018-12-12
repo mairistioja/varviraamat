@@ -169,19 +169,27 @@ class JoonistusAken(QMainWindow):
         if failinimi == '':
             return
 
-        fail = open(failinimi)
+        fail = open(failinimi, encoding="UTF-8")
         read = fail.readlines()
         while len(read) > 0 and read[-1].strip() == "":
             del read[-1]
+        self.varvid = []
         if re.match('^<!--värviraamat [^-]* -->$' ,read[-1].strip()):
-            värvid = read[-1].strip()
+            self.varvid = read[-1].strip()[16:-4].strip().split(',')
+            for i in range(len(self.varvid)):
+                v = self.varvid[i].strip().split(' ')
+                self.varvid[i] = QColor(int(v[0]), int(v[1]), int(v[2]))
             del read[-1]
-
+            
         self.failisisu = "".join(read)
         svg = parseString(self.failisisu)
         uus_scene = QGraphicsScene(self)
-        for kujund in svg.getElementsByTagName("path"):
-            d = kujund.getAttribute("d")
+        pathid = svg.getElementsByTagName("path")
+        for i in range(len(pathid)):
+            if len(self.varvid) <= i:
+                self.varvid.append(QColor(0, 0, 0))
+
+            d = pathid[i].getAttribute("d")
 
             # teisendame loetavamale kujule
             d = re.sub("([MmLlHhVvAaCcSsQqTtZz])([-0-9.])", "\\1 \\2", d) #tühik vahele
@@ -191,7 +199,7 @@ class JoonistusAken(QMainWindow):
 
             d = d.split()
             print(d)
-            e = JoonistusElement(self)
+            e = JoonistusElement(self, i)
             p = QPainterPath()
             käsk = ""
             eelnev_käsk = ""
@@ -301,14 +309,16 @@ class JoonistusAken(QMainWindow):
             self.view.setScene(uus_scene)
 
 class JoonistusElement(QGraphicsPathItem):
-    def __init__(self, peaaken):
+    def __init__(self, peaaken, indeks):
         super().__init__()
         self.peaaken = peaaken
         self.setPen(QPen(Qt.NoPen))
-        self.setBrush(QColor(0, 0, 0))
+        self.setBrush(peaaken.varvid[indeks])
+        self.indeks = indeks
         
     def mousePressEvent(self, event): #seda kutsutakse välja, kui keegi vajutab QGraphicsPathItemi peale, event-i sees on tõenäol sündmuse info
         self.setBrush(self.peaaken.aktiivne_varv)
+        self.peaaken.varvid[self.indeks] = self.peaaken.aktiivne_varv
         return QGraphicsPathItem.mousePressEvent(self, event) #päris kindel ei ole, kas seda on vaja, aga vist on hea stiil
 
 app = QApplication(sys.argv)
