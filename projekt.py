@@ -140,8 +140,13 @@ class JoonistusAken(QMainWindow):
         fileMenu.addAction(quitAction) #paneb quitActioni failimenüü lõppu
         
         toolbar = self.addToolBar('maintoolbar')
-        color_action = toolbar.addAction('Vali värv')
-        color_action.triggered.connect(self.vali_varv)
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+        # nupule värviga ikoon: https://stackoverflow.com/a/13350864
+        pixmap = QPixmap(100,100)
+        pixmap.fill(self.aktiivne_varv)
+        self.color_action = toolbar.addAction(QIcon(pixmap), 'Vali värv')
+        self.color_action.triggered.connect(self.vali_varv)
         
         # Joonistusala:
         self.view = QGraphicsView(self) #Qgraphicsview on widget, mis kuvab joonistusala
@@ -154,6 +159,9 @@ class JoonistusAken(QMainWindow):
         dialog.setCurrentColor(self.aktiivne_varv)
         if dialog.exec() == 1:
             self.aktiivne_varv = dialog.currentColor()
+            pixmap = QPixmap(100, 100)
+            pixmap.fill(self.aktiivne_varv)
+            self.color_action.setIcon(QIcon(pixmap))
 
 
     def ava_fail(self):
