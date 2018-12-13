@@ -8,6 +8,7 @@ from PyQt5.QtGui import *
 from xml.dom.minidom import parseString
 import math
 import re
+import os
 
 # See funktsioon on litsenseeritud LGPL 2.0 litsentsiga,
 #   Copyright (C) 2016 The Qt Company Ltd.it.
@@ -125,7 +126,7 @@ def pathArc(path, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, cur
 class JoonistusAken(QMainWindow):
     def __init__(self): # self viitab klassile endale, init on konstruktor
         super().__init__() #konstrueerib superklassi
-        self.setWindowTitle("Test") #akna pealkiri
+        self.setWindowTitle("Värviraamat") #akna pealkiri
         self.aktiivne_varv = QColor(0, 0, 0)
 
         # Menüüd:
@@ -174,13 +175,13 @@ class JoonistusAken(QMainWindow):
         varvide_sone = ','.join(varvide_list)
         print(varvide_sone)
         
-        uus_failinimi, _ = QFileDialog.getSaveFileName(self, 'Salvesta fail','/', 'Joonistused (*.svg)')
+        uus_failinimi, _ = QFileDialog.getSaveFileName(self, 'Salvesta fail',os.path.dirname(os.path.realpath(__file__)), 'Joonistused (*.svg)')
         uus_fail = open(uus_failinimi, 'w', encoding = 'UTF-8')
         uus_fail.write(self.failisisu + '\n' + '<!--värviraamat ' + varvide_sone + ' -->')
         uus_fail.close()
 
     def ava_fail(self):
-        failinimi, _ = QFileDialog.getOpenFileName(self, 'Ava joonistus', '/', 'Joonistused (*.svg)')
+        failinimi, _ = QFileDialog.getOpenFileName(self, 'Ava joonistus', os.path.dirname(os.path.realpath(__file__)), 'Joonistused (*.svg)')
         if failinimi == '':
             return
 
